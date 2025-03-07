@@ -1,0 +1,103 @@
+services:
+  ## Sql Docker Compose Config
+  postgres-order:
+    container_name: postgres-order
+    image: postgres
+    environment:
+      POSTGRES_DB: order-service
+      POSTGRES_USER: rajp
+      POSTGRES_PASSWORD: rajp
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-order:/data/postgres
+    expose:
+      - "5431"
+    ports:
+      - "5431:5431"
+    command: -p 5431
+    restart: always
+
+  postgres-game:
+    container_name: postgres-game
+    image: postgres
+    environment:
+      POSTGRES_DB: game-service
+      POSTGRES_USER: rajp
+      POSTGRES_PASSWORD: rajp
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-game:/data/postgres
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    restart: always
+
+  postgres-user:
+    container_name: postgres-user
+    image: postgres
+    environment:
+      POSTGRES_DB: user-service
+      POSTGRES_USER: rajp
+      POSTGRES_PASSWORD: rajp
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-user:/data/postgres
+    expose:
+      - "5433"
+    ports:
+      - "5433:5432"
+    restart: always
+
+  ## Game-Service Docker Compose Config
+  game-service:
+    container_name: game-service
+    build:  # Set the context to the parent module
+      context: ./game-service
+      dockerfile: /Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-game:5432/game-service
+    depends_on:
+      - postgres-game
+
+  ## Order-Service Docker Compose Config
+  order-service:
+    container_name: order-service
+    build:  # Set the context to the parent module
+      context: ./order-service
+      dockerfile: /Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order-service
+    depends_on:
+      - postgres-order
+
+  ## User-Service Docker Compose Config
+  user-service:
+    container_name: user-service
+    build:  # Set the context to the parent module
+      context: ./user-service
+      dockerfile: /Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/user-service
+    depends_on:
+      - postgres-user
+
+  ## message-Service Docker Compose Config
+  message-service:
+    container_name: message-service
+    build:
+      context: ./message-service
+      dockerfile: /Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
