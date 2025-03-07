@@ -1,0 +1,8 @@
+postgres-game/
+postgres-order/
+postgres-user/
+.idea/
+game-service/target
+user-service/target
+order-service/target
+message-service/target
