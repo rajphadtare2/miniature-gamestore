@@ -2,8 +2,11 @@ package minigameacle.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "users")
@@ -20,6 +23,8 @@ public class User {
 
     @ElementCollection
     @CollectionTable(name = "user_games", joinColumns = @JoinColumn(name = "email"))
-    @Column(name = "gameName")
-    List<String> games;
+    @MapKeyColumn(name="game_id")
+    @Column(name = "game_name")
+    @Fetch(FetchMode.JOIN)
+    Map<String, String> games = new HashMap<>();
 }

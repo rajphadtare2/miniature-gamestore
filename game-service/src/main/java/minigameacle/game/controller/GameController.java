@@ -40,4 +40,9 @@ public class GameController {
     public ResponseEntity<List<DevResponse>> getAllDevs(){
         return ResponseEntity.status(HttpStatus.OK).body(gameService.getAllDevs());
     }
+
+    @GetMapping
+    public ResponseEntity<GameResponse> getGameByIdOrName(@RequestParam("id") String id){
+        return ResponseEntity.status(HttpStatus.OK).body(gameService.getGameByIdOrName(id));
+    }
 }
