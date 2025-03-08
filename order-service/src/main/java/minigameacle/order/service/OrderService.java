@@ -72,7 +72,7 @@ public class OrderService {
     }
 
     private void saveGamesInUser(Order placedOrder) {
-        Map<String,String> gamesMap = placedOrder.getOrderItems().stream()
+        Map<Integer,String> gamesMap = placedOrder.getOrderItems().stream()
                 .collect(Collectors.toMap(OrderItem::getItemCode, OrderItem::getItemName));
         try {
             apiClient.sendPutRequest(SAVE_GAMES_IN_USER, Map.of("email",placedOrder.getOwner(),"games",gamesMap));
@@ -91,6 +91,7 @@ public class OrderService {
     private OrderItem mapToOrderItem(OrderItemRequest orderItemRequest) {
         return OrderItem.builder()
                 .itemCode(orderItemRequest.getItemCode())
+                .itemName(orderItemRequest.getItemName())
                 .build();
     }
 
@@ -139,10 +140,11 @@ public class OrderService {
     }
 
     private OrderItem enrichOrderItem(OrderItem orderItem) {
-        String id = Objects.nonNull(orderItem.getItemCode()) ? orderItem.getItemCode(): orderItem.getItemName();
+        var id = Objects.nonNull(orderItem.getItemCode()) ? orderItem.getItemCode().toString(): orderItem.getItemName();
+        log.info("fetching games for id: {}",id);
         try {
             JsonNode json = apiClient.sendGetRequest(GET_ITEM, Map.of("id", id));
-            orderItem.setItemCode(json.get("gameId").asText());
+            orderItem.setItemCode(Integer.parseInt(json.get("gameId").asText()));
             orderItem.setItemName(json.get("name").asText());
             orderItem.setItemPrice(json.get("price").asDouble());
             return orderItem;
