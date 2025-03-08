@@ -58,6 +58,20 @@ public class GameService {
                 .collect(Collectors.toList());
     }
 
+    public GameResponse getGameByIdOrName(String id) {
+        return Optional.ofNullable(id)
+                .flatMap(i -> {
+                    try {
+                        return gameRepository.findById(Integer.parseInt(i));
+                    } catch (NumberFormatException e) {
+                        return gameRepository.findByNameIgnoreCase(i);
+                    }
+                })
+                .map(this::mapGameToResponse)
+                .orElseThrow(() -> new RuntimeException("Game with ID or Name " + id + " not found."));
+
+    }
+
     private GameResponse mapGameToResponse(Game game) {
         return GameResponse.builder()
                 .gameId(game.getGameId())
@@ -92,5 +106,4 @@ public class GameService {
                         .collect(Collectors.toList()))
                 .build();
     }
-
 }

@@ -2,6 +2,7 @@ package minigameacle.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import minigameacle.user.dto.GamesRequest;
 import minigameacle.user.dto.UserRequest;
 import minigameacle.user.dto.UserResponse;
 import minigameacle.user.service.UserService;
@@ -23,9 +24,21 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
+    @PutMapping("/saveGames")
+    public ResponseEntity<UserResponse> saveGamesToUser(@RequestBody GamesRequest gamesRequest){
+        UserResponse userResponse = userService.saveGamesToUser(gamesRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
+    }
+
+    @GetMapping
+    public ResponseEntity<UserResponse> getUser(@RequestParam String email){
+        UserResponse userResponse = userService.getUserByEmail(email);
+        return ResponseEntity.status(HttpStatus.OK).body(userResponse);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception ex) {
         log.error("ERROR: ",ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("User Could not be created due to internal error");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }

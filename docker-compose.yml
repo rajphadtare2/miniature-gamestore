@@ -13,8 +13,7 @@ services:
     expose:
       - "5431"
     ports:
-      - "5431:5431"
-    command: -p 5431
+      - "5431:5432"
     restart: always
 
   postgres-game:
@@ -73,7 +72,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5432/order-service
     depends_on:
       - postgres-order
 
