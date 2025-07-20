@@ -7,9 +7,8 @@ services:
       POSTGRES_DB: order-service
       POSTGRES_USER: rajp
       POSTGRES_PASSWORD: rajp
-      PGDATA: /data/postgres
     volumes:
-      - ./postgres-order:/data/postgres
+      - ./postgres-order:/var/lib/data/postgres
     expose:
       - "5431"
     ports:
@@ -23,9 +22,8 @@ services:
       POSTGRES_DB: game-service
       POSTGRES_USER: rajp
       POSTGRES_PASSWORD: rajp
-      PGDATA: /data/postgres
     volumes:
-      - ./postgres-game:/data/postgres
+      - ./postgres-game:/var/lib/data/postgres
     expose:
       - "5432"
     ports:
@@ -39,9 +37,8 @@ services:
       POSTGRES_DB: user-service
       POSTGRES_USER: rajp
       POSTGRES_PASSWORD: rajp
-      PGDATA: /data/postgres
     volumes:
-      - ./postgres-user:/data/postgres
+      - ./postgres-user:/var/lib/data/postgres
     expose:
       - "5433"
     ports:
@@ -53,7 +50,7 @@ services:
     container_name: game-service
     build:  # Set the context to the parent module
       context: ./game-service
-      dockerfile: /Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8083:8083"
     environment:
@@ -61,13 +58,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-game:5432/game-service
     depends_on:
       - postgres-game
+    restart: always
 
   ## Order-Service Docker Compose Config
   order-service:
     container_name: order-service
     build:  # Set the context to the parent module
       context: ./order-service
-      dockerfile: /Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     environment:
@@ -75,13 +73,14 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5432/order-service
     depends_on:
       - postgres-order
+    restart: always
 
   ## User-Service Docker Compose Config
   user-service:
     container_name: user-service
     build:  # Set the context to the parent module
       context: ./user-service
-      dockerfile: /Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
@@ -89,14 +88,59 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/user-service
     depends_on:
       - postgres-user
+    restart: always
 
   ## message-Service Docker Compose Config
   message-service:
     container_name: message-service
     build:
       context: ./message-service
-      dockerfile: /Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    restart: always
+
+#kafka configuration
+  broker:
+    image: apache/kafka:latest
+    hostname: broker
+    container_name: broker
+    ports:
+      - "9092:9092"   # External access (Spring Boot client)
+      - "29092:29092"  # Internal Docker access
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:29093
+      KAFKA_LISTENERS: PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+  kafka-cli:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-cli
+    depends_on:
+      - broker
+    entrypoint: ["sleep", "infinity"]
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8084:8084"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:29092
+    depends_on:
+      - broker

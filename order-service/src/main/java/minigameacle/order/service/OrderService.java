@@ -2,6 +2,7 @@ package minigameacle.order.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import minigameacle.order.dto.OrderItemRequest;
@@ -9,20 +10,24 @@ import minigameacle.order.dto.OrderItemResponse;
 import minigameacle.order.dto.OrderRequest;
 import minigameacle.order.dto.OrderResponse;
 import minigameacle.order.enums.OrderStatus;
+import minigameacle.order.event.OrderPlacedEvent;
+import minigameacle.order.event.service.KafkaEventService;
 import minigameacle.order.model.Order;
 import minigameacle.order.model.OrderItem;
 import minigameacle.order.repository.OrderRepository;
 import minigameacle.order.rest.ApiClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Slf4j
 public class OrderService {
 
@@ -30,8 +35,9 @@ public class OrderService {
     private static final String GET_ITEM = "http://game-service:8083/api/games";
     private static final String SAVE_GAMES_IN_USER = "http://user-service:8081/api/users/saveGames";
 
-    private final OrderRepository orderRepository;
-    private final ApiClient apiClient;
+    private OrderRepository orderRepository;
+    private ApiClient apiClient;
+    private KafkaEventService kafkaEventService;
 
     public OrderResponse placeOrder(OrderRequest orderRequest) {
         List<Order> orders = orderRepository.findOrderByOwnerAndOrderItem(orderRequest.getOwner(),
@@ -55,20 +61,33 @@ public class OrderService {
         order.setStatus(OrderStatus.PENDING);
         Order placedOrder =  orderRepository.save(order);
         try {
-            // Step 2: Call external API to save games
             saveGamesInUser(placedOrder);
-
-            // Step 3: If successful, mark order as completed
             placedOrder.setStatus(OrderStatus.COMPLETED);
             orderRepository.save(placedOrder);
+            createAndPublishOrderPlacedEvent(placedOrder);
         } catch (Exception e) {
             log.error("ERROR: ", e);
-            // Step 4: If API fails, mark order as FAILED and return an error
+            //If save game API fails, mark order as FAILED and return an error
             placedOrder.setStatus(OrderStatus.FAILED);
             orderRepository.save(placedOrder);
             throw new RuntimeException("Purchase failed: " + e.getMessage());
         }
         return mapToOrderResponse(placedOrder);
+    }
+
+    private void createAndPublishOrderPlacedEvent(Order placedOrder) {
+        Map<String,String> items = new HashMap<>();
+        for(OrderItem orderItem: placedOrder.getOrderItems()){
+            items.put("name",orderItem.getItemName());
+            items.put("code", String.valueOf(orderItem.getItemCode()));
+            items.put("price", String.valueOf(orderItem.getItemPrice()));
+        }
+        OrderPlacedEvent event =  OrderPlacedEvent.builder()
+                .orderId(placedOrder.getOrderNumber().toString())
+                .orderLineItems(items)
+                .owner(placedOrder.getOwner())
+                .build();
+        kafkaEventService.handleEvent(event);
     }
 
     private void saveGamesInUser(Order placedOrder) {
