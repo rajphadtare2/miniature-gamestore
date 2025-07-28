@@ -6,3 +6,4 @@ game-service/target
 user-service/target
 order-service/target
 message-service/target
+/node_modules
