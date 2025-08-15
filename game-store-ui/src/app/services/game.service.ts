@@ -16,7 +16,7 @@ export interface Game {
   providedIn: 'root'
 })
 export class GameService {
-  private apiUrl = 'http://localhost:8083/api/games/allGames';
+  private apiUrl = 'http://localhost:8085/api/games/allGames';
 
   constructor(private http: HttpClient) {}
 
@@ -27,6 +27,6 @@ export class GameService {
   purchaseGame(gameId: string): Observable<any> {
     //const token = localStorage.getItem('token');
     //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.post('http://localhost:8082/api/orders', { gameId });
+    return this.http.post('http://localhost:8085/api/orders', { gameId });
   }
 }
