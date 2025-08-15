@@ -14,6 +14,8 @@ services:
     ports:
       - "5431:5432"
     restart: always
+    networks:
+      - app-network
 
   postgres-game:
     container_name: postgres-game
@@ -29,6 +31,8 @@ services:
     ports:
       - "5432:5432"
     restart: always
+    networks:
+      - app-network
 
   postgres-user:
     container_name: postgres-user
@@ -44,6 +48,8 @@ services:
     ports:
       - "5433:5432"
     restart: always
+    networks:
+      - app-network
 
   ## Game-Service Docker Compose Config
   game-service:
@@ -53,12 +59,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8083:8083"
+      - "5003:5003"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-game:5432/game-service
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5003
     depends_on:
       - postgres-game
+      - discovery-service
+      - api-gateway
     restart: always
+    networks:
+      - app-network
 
   ## Order-Service Docker Compose Config
   order-service:
@@ -68,12 +80,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+      - "5000:5000"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5432/order-service
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
     depends_on:
       - postgres-order
+      - discovery-service
+      - api-gateway
     restart: always
+    networks:
+      - app-network
 
   ## User-Service Docker Compose Config
   user-service:
@@ -83,12 +101,18 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
+      - "5001:5001"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/user-service
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5001
     depends_on:
       - postgres-user
+      - discovery-service
+      - api-gateway
     restart: always
+    networks:
+      - app-network
 
   ## message-Service Docker Compose Config
   message-service:
@@ -98,11 +122,51 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
+      - "5002:5002"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     restart: always
+    depends_on:
+      - discovery-service
+      - api-gateway
+    networks:
+      - app-network
 
-#kafka configuration
+  ## api-gateway Docker Compose Config
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+      - "5005:5005"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    restart: always
+    depends_on:
+      - discovery-service
+    networks:
+      - app-network
+
+  discovery-service:
+    container_name: discovery-service
+    build:
+      context: ./discovery-service
+      dockerfile: Dockerfile
+    ports:
+      - "8086:8086"
+      - "5006:5006"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
+    restart: always
+    networks:
+      - app-network
+
+  #kafka configuration
   broker:
     image: apache/kafka:latest
     hostname: broker
@@ -126,6 +190,8 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - app-network
 
   kafka-cli:
     image: confluentinc/cp-kafka:7.6.0
@@ -133,6 +199,8 @@ services:
     depends_on:
       - broker
     entrypoint: ["sleep", "infinity"]
+    networks:
+      - app-network
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -144,3 +212,41 @@ services:
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=broker:29092
     depends_on:
       - broker
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./game-store-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      - game-service
+      - user-service
+      - order-service
+    networks:
+      - app-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: start-dev
+    environment:
+      KC_DB: dev-file
+      KC_HTTP_PORT: 8087
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_IMPORT: /opt/keycloak/data/realm-export.json
+    ports:
+      - "8087:8087"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+      - ./keycloak/realm-export.json:/opt/keycloak/data/realm-export.json
+    networks:
+      - app-network
+
+volumes:
+  keycloak_data:
+
+networks:
+  app-network:
+    driver: bridge

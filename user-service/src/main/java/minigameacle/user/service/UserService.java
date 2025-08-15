@@ -22,6 +22,7 @@ public class UserService {
 
     public UserResponse createUser(UserRequest userRequest){
         User savedUser = userRepository.save(mapToEntity(userRequest));
+        log.info("Saved User: {} ", userRequest.getEmail());
         return mapToDTO(savedUser);
     }
 

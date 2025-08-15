@@ -1,0 +1,50 @@
+{
+  "id": "game-store",
+  "realm": "game-store",
+  "enabled": true,
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "game-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"]
+    },
+    {
+      "clientId": "game-store-backend",
+      "enabled": true,
+      "secret": "api-secret",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "admin" },
+      { "name": "user" }
+    ]
+  },
+  "clientScopeMappings": [
+    {
+      "client": "game-store-backend",
+      "roles": [
+        { "client": "realm-management", "roles": ["manage-users", "view-users"] }
+      ]
+    }
+  ]
+}
