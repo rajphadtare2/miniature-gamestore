@@ -7,3 +7,14 @@ user-service/target
 order-service/target
 message-service/target
 /node_modules
+/discovery-service/target
+/api-gateway/target
+game-store-ui/package-lock.json
+game-store-ui/package.json
+package-lock.json
+package.json
+game-store-ui/package-lock.json
+game-store-ui/package.json
+game-store-ui/package-lock.json
+game-store-ui/package-lock.json
+game-store-ui/package.json
