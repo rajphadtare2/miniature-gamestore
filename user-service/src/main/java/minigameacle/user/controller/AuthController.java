@@ -1,12 +1,15 @@
 package minigameacle.user.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import minigameacle.user.dto.LoginDTO;
 import minigameacle.user.dto.UserDTO;
 import minigameacle.user.dto.UserResponse;
 import minigameacle.user.service.KeycloakUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @Slf4j
 @RestController
@@ -23,6 +26,12 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(@RequestBody UserDTO userDTO) {
         log.info("In Register Controller");
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userDTO));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) throws IOException {
+        log.info("In Login Controller");
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.login(loginDTO));
     }
 
 }

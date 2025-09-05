@@ -3,7 +3,10 @@
     <img src="assets/gamestore-logo.png" width="40" height="40" style="margin-right: 10px;" alt="Logo">
     <h1>GameStore</h1>
   </div>
-  <div>
+  <div *ngIf="isLoggedIn">
+    Hello {{ username }}
+  </div>
+  <div *ngIf="!isLoggedIn"> 
     <a routerLink="/login" style="margin-right: 10px; color: white;">Login</a>
     <a routerLink="/register" style="color: white;">Register</a>
   </div>

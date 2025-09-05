@@ -1,30 +1,32 @@
-package com.example.gateway.config;
+package minigameacle.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for APIs
-                .authorizeHttpRequests(auth -> auth
-                        // Public APIs (no token needed)
-                        .requestMatchers("/register", "/login").permitAll()
-
-                        // All other requests require authentication
-                        .anyRequest().authenticated()
+                .cors(withDefaults())  // enables CORS correctly
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .authorizeExchange(auth -> auth
+                        .pathMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                        .anyExchange().authenticated()
                 )
-                // Enable JWT-based authentication with Keycloak
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->{
+                }));
 
         return http.build();
     }
 }
+
+

@@ -5,8 +5,27 @@ spring:
   main:
     web-application-type: reactive
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8087/realms/game-store/protocol/openid-connect/certs
+
   cloud:
     gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
       routes:
         - id: game-service
           uri: lb://game-service
@@ -27,14 +46,6 @@ spring:
           uri: lb://user-service
           predicates:
             - Path=/api/users/**
-
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins: "http://localhost:4200"
-            allowedMethods: "*"
-            allowedHeaders: "*"
-            allowCredentials: true
 
 logging:
   level:

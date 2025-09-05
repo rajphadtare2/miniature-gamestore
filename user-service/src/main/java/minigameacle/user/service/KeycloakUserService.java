@@ -1,6 +1,7 @@
 package minigameacle.user.service;
 
 import lombok.extern.slf4j.Slf4j;
+import minigameacle.user.dto.LoginDTO;
 import minigameacle.user.dto.UserDTO;
 import minigameacle.user.dto.UserRequest;
 import minigameacle.user.dto.UserResponse;
@@ -13,11 +14,15 @@ import org.springframework.stereotype.Service;
 
 import jakarta.ws.rs.core.Response;
 import java.util.Collections;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
 public class KeycloakUserService {
 
+    private final String serverUrl;
     private final Keycloak keycloak;
     private final String realm;
     private final UserService userService;
@@ -31,6 +36,7 @@ public class KeycloakUserService {
 
         this.userService = userService;
         this.realm = realm;
+        this.serverUrl = serverUrl;
         this.keycloak = KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm("master")
@@ -68,6 +74,33 @@ public class KeycloakUserService {
             }
         }
 
+    }
+
+    public String login(LoginDTO loginDTO) throws IOException {
+        String tokenUrl = serverUrl + "/realms/" + realm + "/protocol/openid-connect/token";
+
+        String urlParameters =
+                "grant_type=password" +
+                        "&client_id=" + URLEncoder.encode(loginDTO.getClientId(), StandardCharsets.UTF_8) +
+                        "&username=" + URLEncoder.encode(loginDTO.getEmail(), StandardCharsets.UTF_8) +
+                        "&password=" + URLEncoder.encode(loginDTO.getPassword(), StandardCharsets.UTF_8);
+
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+        HttpURLConnection conn = (HttpURLConnection) new URL(tokenUrl).openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.getOutputStream().write(postData);
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            return sb.toString();
+        }
     }
 }
 

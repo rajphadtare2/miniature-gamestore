@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -11,15 +12,28 @@ export class RegisterComponent {
   email = '';
   password = '';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   register() {
-    this.http.post('http://localhost:8085/api/auth/register', {
-      email: this.email,
-      password: this.password,
-      name: this.name
-    }).subscribe(res => {
-      alert('Registered Successfully');
+    this.authService.register(this.name, this.email, this.password).subscribe({
+  next: () => {
+    this.authService.login( this.email,this.password ).subscribe({
+      next: tokenResponse => {
+        // Save token to local storage, e.g.,
+        localStorage.setItem('access_token', tokenResponse.access_token);
+        // Navigate to logged-in page or update UI accordingly
+      },
+      error: err => {
+        console.error('Login failed', err);
+      }
     });
+  },
+  error: err => {
+    console.error('Registration failed', err);
+  }
+  });
+
   }
 }
