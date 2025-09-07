@@ -51,6 +51,7 @@ public class KeycloakUserService {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(userDto.getEmail());
         user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getName());
         user.setEnabled(true);
 
         CredentialRepresentation cred = new CredentialRepresentation();
@@ -85,6 +86,8 @@ public class KeycloakUserService {
                         "&username=" + URLEncoder.encode(loginDTO.getEmail(), StandardCharsets.UTF_8) +
                         "&password=" + URLEncoder.encode(loginDTO.getPassword(), StandardCharsets.UTF_8);
 
+        log.info("Hitting Keycloak with  URL: {} and Parameters: {}", tokenUrl, urlParameters);
+
         byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
         HttpURLConnection conn = (HttpURLConnection) new URL(tokenUrl).openConnection();
@@ -93,7 +96,14 @@ public class KeycloakUserService {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.getOutputStream().write(postData);
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+        int responseCode = conn.getResponseCode();
+        InputStream stream;
+        if (responseCode >= 200 && responseCode < 300) {
+            stream = conn.getInputStream();
+        } else {
+            stream = conn.getErrorStream();
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

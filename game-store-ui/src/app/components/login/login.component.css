@@ -1,0 +1,140 @@
+/* Full screen center container with flexbox */
+.login-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+/* Background image with 50% opacity */
+.background-image {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('assets/background.jpg') center/cover no-repeat;
+  opacity: 0.5;
+  z-index: 0;
+}
+
+/* The form container */
+.login-form {
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 2rem 3rem;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  width: 90%;
+  max-width: 400px;
+  z-index: 1;
+  box-sizing: border-box;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+/* Form heading */
+.login-form h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+/* Input group and animated label */
+.input-group {
+  position: relative;
+  margin-bottom: 1.6rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 10px 10px 10px 10px;
+  font-size: 1rem;
+  border: 1.8px solid #ccc;
+  border-radius: 4px;
+  background: transparent;
+  transition: border-color 0.3s;
+  outline: none;
+}
+
+.input-group input:focus {
+  border-color: #007bff;
+}
+
+.input-group label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+/* Float the label on input focus or when input has text */
+.input-group.focused label {
+  top: -8px;
+  left: 8px;
+  background: white;
+  font-size: 0.8rem;
+  padding: 0 4px;
+  color: #007bff;
+}
+
+/* Error messages */
+.error {
+  color: #d93025;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* General error message */
+.error-message {
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #d93025;
+  font-weight: 600;
+}
+
+/* Submit button */
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button[type="submit"]:disabled {
+  background-color: #7baaf7;
+  cursor: not-allowed;
+}
+
+button[type="submit"]:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media(max-width: 480px) {
+  .login-form {
+    padding: 1.5rem 1.8rem;
+  }
+  .login-form h2 {
+    font-size: 1.5rem;
+  }
+}

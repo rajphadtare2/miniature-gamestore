@@ -9,7 +9,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://localhost:8087/realms/game-store/protocol/openid-connect/certs
+          jwk-set-uri: http://keycloak:8087/realms/game-store/protocol/openid-connect/certs
 
   cloud:
     gateway:

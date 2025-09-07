@@ -9,6 +9,9 @@ import { LoginComponent } from './components/login/login.component';
 import { RegisterComponent } from './components/register/register.component';
 import { GameCardComponent } from './components/game-card/game-card.component';
 import { FormsModule } from '@angular/forms';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './auth.interceptor';
+import { NotificationToastComponent } from './components/notification-toast/notification-toast.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +20,8 @@ import { FormsModule } from '@angular/forms';
     HomeComponent,
     LoginComponent,
     RegisterComponent,
-    GameCardComponent
+    GameCardComponent,
+    NotificationToastComponent
   ],
   imports: [
     BrowserModule,
@@ -25,7 +29,9 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -3,8 +3,11 @@
     <img src="assets/gamestore-logo.png" width="40" height="40" style="margin-right: 10px;" alt="Logo">
     <h1>GameStore</h1>
   </div>
-  <div *ngIf="isLoggedIn">
-    Hello {{ username }}
+  <div *ngIf="isLoggedIn" style="display: flex; align-items: center;">
+    <span>Hello {{ username }}</span>
+    <button (click)="logout()" style="margin-left: 15px; padding: 6px 12px; font-size: 0.9rem; cursor: pointer;">
+      Logout
+    </button>
   </div>
   <div *ngIf="!isLoggedIn"> 
     <a routerLink="/login" style="margin-right: 10px; color: white;">Login</a>

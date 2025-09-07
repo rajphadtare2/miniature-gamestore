@@ -1,7 +1,58 @@
+<div class="login-container">
+  <div class="background-image"></div>
+  <form class="login-form" (ngSubmit)="register()" #registerForm="ngForm">
     <h2>Register</h2>
-    <form (submit)="register()">
-      <input [(ngModel)]="email" placeholder="Email" name="email" required>
-      <input [(ngModel)]="password" type="password" placeholder="Password" name="password" required>
-      <input [(ngModel)]="name" placeholder="Name" name="name" required>
-      <button type="submit">Register</button>
-    </form>
+
+    <div class="input-group" [class.focused]="nameFocused || name">
+      <input
+        type="text"
+        name="name"
+        required
+        [(ngModel)]="name"
+        (focus)="nameFocused = true"
+        (blur)="nameFocused = false"
+        #nameInput="ngModel"
+      />
+      <label>Name</label>
+      <div class="error" *ngIf="nameInput.invalid && nameInput.touched">
+        Name is required
+      </div>
+    </div>
+
+    <div class="input-group" [class.focused]="emailFocused || email">
+      <input
+        type="email"
+        name="email"
+        required
+        [(ngModel)]="email"
+        (focus)="emailFocused = true"
+        (blur)="emailFocused = false"
+        #emailInput="ngModel"
+      />
+      <label>Email</label>
+      <div class="error" *ngIf="emailInput.invalid && emailInput.touched">
+        Email is required
+      </div>
+    </div>
+
+    <div class="input-group" [class.focused]="passwordFocused || password">
+      <input
+        type="password"
+        name="password"
+        required
+        [(ngModel)]="password"
+        (focus)="passwordFocused = true"
+        (blur)="passwordFocused = false"
+        #passwordInput="ngModel"
+      />
+      <label>Password</label>
+      <div class="error" *ngIf="passwordInput.invalid && passwordInput.touched">
+        Password is required
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <button type="submit" [disabled]="registerForm.invalid">Register</button>
+  </form>
+</div>
