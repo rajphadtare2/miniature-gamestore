@@ -2,20 +2,124 @@ package minigameacle.game.datainit;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import minigameacle.game.dto.DevRequest;
-import minigameacle.game.dto.GameRequest;
-import minigameacle.game.service.GameService;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.ConnectionCallback;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 @AllArgsConstructor
 @Component
 @Slf4j
 public class DataInitializer implements CommandLineRunner {
 
-    private final GameService gameService;
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
+    private final JdbcTemplate jdbcTemplate;
+
+    @Override
+    public void run(String... args) throws Exception {
+        logger.info("Checking if developers data exists...");
+        Integer devCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM developers", Integer.class);
+
+        if (devCount == null || devCount == 0) {
+            logger.info("No developers found. Starting import...");
+            importDevelopers();
+            importGames();
+            logger.info("Data import completed.");
+        } else {
+            logger.info("Developers data already exists (count: {}). Skipping import.", devCount);
+        }
+    }
+
+    private void importDevelopers() throws Exception {
+        logger.info("Starting import of developers from CSV...");
+        ClassPathResource resource = new ClassPathResource("data/developers.csv");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            String sql = "COPY developers(name) FROM STDIN WITH CSV HEADER";
+            jdbcTemplate.execute((ConnectionCallback<Object>) conn -> {
+                logger.info("Unwrapping connection for developers import COPY...");
+                Connection nativeConn = conn;
+                while (nativeConn.isWrapperFor(Connection.class)) {
+                    nativeConn = nativeConn.unwrap(Connection.class);
+                }
+
+                if (!(nativeConn instanceof BaseConnection pgBaseConnection)) {
+                    throw new SQLException("Unable to unwrap to BaseConnection");
+                }
+
+                try (InputStream is = resource.getInputStream()) {
+                    CopyManager copyManager = new CopyManager(pgBaseConnection);
+                    logger.info("Executing COPY for developers CSV...");
+                    copyManager.copyIn(sql, is);
+                } catch (IOException e) {
+                    logger.error("IOException during developers COPY", e);
+                    throw new RuntimeException(e);
+                }
+                logger.info("Developers CSV import finished.");
+                return null;
+            });
+        }
+    }
+
+    private void importGames() throws Exception {
+        logger.info("Creating staging table for games if not exists...");
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS games_staging (" +
+                "name VARCHAR(255) UNIQUE NOT NULL, " +
+                "price DOUBLE PRECISION NOT NULL, " +
+                "developer_name VARCHAR(255) NOT NULL)");
+        logger.info("Starting import of games from CSV into staging table...");
+        ClassPathResource resource = new ClassPathResource("data/games.csv");
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            String sql = "COPY games_staging(name, price, developer_name) FROM STDIN WITH CSV HEADER";
+            jdbcTemplate.execute((ConnectionCallback<Object>) conn -> {
+                logger.info("Unwrapping connection for games import COPY...");
+                Connection nativeConn = conn;
+                while (nativeConn.isWrapperFor(Connection.class)) {
+                    nativeConn = nativeConn.unwrap(Connection.class);
+                }
+
+                if (!(nativeConn instanceof BaseConnection pgBaseConnection)) {
+                    throw new SQLException("Unable to unwrap to BaseConnection");
+                }
+
+                try (InputStream is = resource.getInputStream()) {
+                    CopyManager copyManager = new CopyManager(pgBaseConnection);
+                    logger.info("Executing COPY for games CSV...");
+                    copyManager.copyIn(sql, is);
+                } catch (IOException e) {
+                    logger.error("IOException during games COPY", e);
+                    throw new RuntimeException(e);
+                }
+                logger.info("Games CSV import finished.");
+                return null;
+            });
+        }
+
+        logger.info("Inserting data from staging into games table...");
+        int insertedRows = jdbcTemplate.update("INSERT INTO games(name, price, dev_id) " +
+                "SELECT gs.name, gs.price, d.devId FROM games_staging gs " +
+                "JOIN developers d ON gs.developer_name = d.name");
+        logger.info("Inserted {} rows into games table.", insertedRows);
+
+        logger.info("Dropping games staging table...");
+        jdbcTemplate.execute("DROP TABLE games_staging");
+        logger.info("Games staging table dropped.");
+    }
+}
+
+
+    /*private final GameService gameService;
 
 
     @Override
@@ -62,5 +166,5 @@ public class DataInitializer implements CommandLineRunner {
 
 
         log.info("✔ Sample game data inserted if not already present.");
-    }
-}
+    }*/
+

@@ -25,8 +25,6 @@ export class GameService {
   }
 
   purchaseGame(gameId: string): Observable<any> {
-    //const token = localStorage.getItem('token');
-    //const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.post('http://localhost:8085/api/orders', { gameId });
   }
 }

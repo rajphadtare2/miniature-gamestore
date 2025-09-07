@@ -17,8 +17,10 @@ public class Game {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer gameId;
 
+    @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false)
     private Double price;
 
     @ManyToOne

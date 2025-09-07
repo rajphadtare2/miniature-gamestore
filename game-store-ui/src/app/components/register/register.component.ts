@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from 'src/app/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -12,27 +13,35 @@ export class RegisterComponent {
   email = '';
   password = '';
 
+  nameFocused = false;
+  emailFocused = false;
+  passwordFocused = false;
+
+  errorMessage = '';
+
   constructor(private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   register() {
+    this.errorMessage = '';
     this.authService.register(this.name, this.email, this.password).subscribe({
-  next: () => {
-    this.authService.login( this.email,this.password ).subscribe({
-      next: tokenResponse => {
-        // Save token to local storage, e.g.,
-        localStorage.setItem('access_token', tokenResponse.access_token);
-        // Navigate to logged-in page or update UI accordingly
-      },
-      error: err => {
-        console.error('Login failed', err);
-      }
-    });
-  },
-  error: err => {
-    console.error('Registration failed', err);
-  }
+    next: () => {
+      this.authService.login( this.email,this.password ).subscribe({
+        next: tokenResponse => {
+          this.authService.saveToken(tokenResponse.access_token);
+          this.authService.setLoggedIn(true); 
+          this.router.navigate(['/']);
+        },
+        error: err => {
+          console.error('Login failed', err);
+        }
+      });
+    },
+    error: err => {
+      console.error('Registration failed', err);
+    }
   });
 
   }

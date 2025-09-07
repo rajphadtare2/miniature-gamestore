@@ -1,1 +1,42 @@
-<p>login works!</p>
+<div class="login-container">
+  <div class="background-image"></div>
+  <form class="login-form" (ngSubmit)="onSubmit()" #loginForm="ngForm">
+    <h2>Login</h2>
+
+    <div class="input-group" [class.focused]="usernameFocused || username">
+      <input
+        type="email"
+        name="username"
+        required
+        [(ngModel)]="username"
+        (focus)="usernameFocused = true"
+        (blur)="usernameFocused = false"
+        #usernameInput="ngModel"
+      />
+      <label>Email</label>
+      <div class="error" *ngIf="usernameInput.invalid && usernameInput.touched">
+        Email is required
+      </div>
+    </div>
+
+    <div class="input-group" [class.focused]="passwordFocused || password">
+      <input
+        type="password"
+        name="password"
+        required
+        [(ngModel)]="password"
+        (focus)="passwordFocused = true"
+        (blur)="passwordFocused = false"
+        #passwordInput="ngModel"
+      />
+      <label>Password</label>
+      <div class="error" *ngIf="passwordInput.invalid && passwordInput.touched">
+        Password is required
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <button type="submit" [disabled]="loginForm.invalid">Log In</button>
+  </form>
+</div>
