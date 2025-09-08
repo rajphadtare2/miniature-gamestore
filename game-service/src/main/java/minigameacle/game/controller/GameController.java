@@ -7,6 +7,7 @@ import minigameacle.game.dto.DevResponse;
 import minigameacle.game.dto.GameRequest;
 import minigameacle.game.dto.GameResponse;
 import minigameacle.game.service.GameService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +33,9 @@ public class GameController {
     }
 
     @GetMapping("/allGames")
-    public ResponseEntity<List<GameResponse>> getAllGames(){
-        return ResponseEntity.status(HttpStatus.OK).body(gameService.getAllGames());
+    public ResponseEntity<Page<GameResponse>> getAllGames(@RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "30") int size){
+        return ResponseEntity.status(HttpStatus.OK).body(gameService.getAllGames(page, size));
     }
 
     @GetMapping("/allDevs")

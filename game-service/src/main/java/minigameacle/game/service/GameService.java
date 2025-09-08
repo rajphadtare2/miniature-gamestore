@@ -10,7 +10,7 @@ import minigameacle.game.model.Developer;
 import minigameacle.game.model.Game;
 import minigameacle.game.repository.DeveloperRepository;
 import minigameacle.game.repository.GameRepository;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -46,10 +46,15 @@ public class GameService {
         return mapDevToResponse(savedDev);
     }
 
-    public List<GameResponse> getAllGames() {
-        return gameRepository.findAll(Sort.by(Sort.Direction.ASC, "gameId")).stream()
+    public Page<GameResponse> getAllGames(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Game> gamesPage = gameRepository.findAll(pageable);
+
+        List<GameResponse> gameResponses = gamesPage.stream()
                 .map(this::mapGameToResponse)
                 .collect(Collectors.toList());
+
+        return new PageImpl<>(gameResponses, pageable, gamesPage.getTotalElements());
     }
 
     public List<DevResponse> getAllDevs() {
@@ -69,7 +74,6 @@ public class GameService {
                 })
                 .map(this::mapGameToResponse)
                 .orElseThrow(() -> new RuntimeException("Game with ID or Name " + id + " not found."));
-
     }
 
     private GameResponse mapGameToResponse(Game game) {
