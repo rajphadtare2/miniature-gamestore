@@ -1,15 +1,27 @@
 <header style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #202020; color: white;">
   <div style="display: flex; align-items: center;">
-    <img src="assets/gamestore-logo.png" width="40" height="40" style="margin-right: 10px;" alt="Logo">
+    <img src="assets/gamestore-logo.png" width="40" height="40" style="margin-right: 10px;" alt="Logo" />
     <h1>GameStore</h1>
   </div>
+
+  <div style="position: relative; flex:1; margin: 0 1rem;">
+    <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange()" placeholder="Search games..." style="width: 100%; padding: 0.4rem 0.6rem; border-radius: 4px; border: none;" />
+
+    <ul *ngIf="suggestions.length > 0" class="suggestions-dropdown" style="position: absolute; top: 100%; left: 0; right: 0; background: white; color: black; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 10; margin: 0; padding: 0; list-style: none;">
+      <li *ngFor="let suggestion of suggestions" (click)="selectSuggestion(suggestion)" style="padding: 0.5rem; cursor: pointer; border-bottom: 1px solid #ddd;">
+        {{ suggestion }}
+      </li>
+    </ul>
+  </div>
+
   <div *ngIf="isLoggedIn" style="display: flex; align-items: center;">
     <span>Hello {{ username }}</span>
     <button (click)="logout()" style="margin-left: 15px; padding: 6px 12px; font-size: 0.9rem; cursor: pointer;">
       Logout
     </button>
   </div>
-  <div *ngIf="!isLoggedIn"> 
+
+  <div *ngIf="!isLoggedIn">
     <a routerLink="/login" style="margin-right: 10px; color: white;">Login</a>
     <a routerLink="/register" style="color: white;">Register</a>
   </div>
