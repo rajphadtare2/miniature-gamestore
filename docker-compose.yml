@@ -244,6 +244,29 @@ services:
     networks:
       - app-network
 
+  ## Reactive-game-Service Docker Compose Config
+  reactive-game-service:
+    container_name: reactive-game-service
+    build:
+      context: ./reactive-game-service
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"
+      - "5004:5004"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres-game:5432/game-service
+      - SPRING_R2DBC_USERNAME=rajp
+      - SPRING_R2DBC_PASSWORD=rajp
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5004
+    depends_on:
+      - postgres-game
+      - discovery-service
+      - api-gateway
+    restart: always
+    networks:
+      - app-network
+
 volumes:
   keycloak_data:
 

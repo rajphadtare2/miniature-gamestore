@@ -22,7 +22,7 @@ export interface GamePage {
   providedIn: 'root'
 })
 export class GameService {
-  private apiUrl = 'http://localhost:8085/api/games/allGames';
+  private apiUrl = 'http://localhost:8085/api/games/reactive/allGames';
 
   constructor(private http: HttpClient) {}
 
@@ -36,7 +36,7 @@ export class GameService {
 
   getSuggestions(query: string): Observable<string[]> {
     const params = new HttpParams().set('query', query);
-    return this.http.get<string[]>('http://localhost:8085/api/games/suggestGames', { params });
+    return this.http.get<string[]>('http://localhost:8085/api/games/reactive/suggestGames', { params });
   }
 
 

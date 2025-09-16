@@ -18,3 +18,4 @@ game-store-ui/package.json
 game-store-ui/package-lock.json
 game-store-ui/package-lock.json
 game-store-ui/package.json
+/reactive-game-service/target
