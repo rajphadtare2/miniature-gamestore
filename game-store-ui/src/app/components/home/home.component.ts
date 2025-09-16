@@ -1,5 +1,6 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { GameService } from 'src/app/services/game.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -10,8 +11,8 @@ export class HomeComponent implements OnInit {
   games: any[] = [];
   page = 0;
   size = 30;
-  totalPages = 0;
   isLoading = false;
+  subscription: Subscription | null = null;
 
   constructor(private gameService: GameService) {}
 
@@ -20,31 +21,39 @@ export class HomeComponent implements OnInit {
   }
 
   loadGames(page: number) {
-    // Prevent multiple calls or loading beyond total pages
-    if (this.isLoading || (this.totalPages && page >= this.totalPages)) {
-      return;
-    }
+    if (this.isLoading) return;
 
     this.isLoading = true;
-    this.gameService.getAllGames(page, this.size).subscribe(data => {
-      this.games = [...this.games, ...data.content];
-      this.totalPages = data.totalPages;
-      this.page = data.number;
-      this.isLoading = false;
-    }, error => {
-      console.error('Error loading games:', error);
-      this.isLoading = false;
-    });
+
+    // unsubscribe previous if still running
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+
+    this.subscription = this.gameService.getAllGames(page, this.size)
+      .subscribe({
+        next: game => {
+          this.games.push(game); // push each streamed game as it arrives
+        },
+        error: err => {
+          console.error('Error loading games:', err);
+          this.isLoading = false;
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.page++; // increment page after flux completes
+        }
+      });
   }
 
   @HostListener('window:scroll', [])
   onScroll(): void {
     const threshold = 300; // px from bottom
-    const position = (window.innerHeight + window.scrollY);
+    const position = window.innerHeight + window.scrollY;
     const height = document.body.offsetHeight;
 
-    if (height - position < threshold) {
-      this.loadGames(this.page + 1);
+    if (height - position < threshold && !this.isLoading) {
+      this.loadGames(this.page);
     }
   }
 }

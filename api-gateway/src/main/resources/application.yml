@@ -27,6 +27,11 @@ spring:
               - "*"
             allowCredentials: true
       routes:
+        - id: reactive-game-service
+          uri: lb://reactive-game-service
+          predicates:
+            - Path=/api/games/reactive/**
+
         - id: game-service
           uri: lb://game-service
           predicates:

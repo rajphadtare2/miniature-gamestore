@@ -19,6 +19,7 @@
     <module>user-service</module>
     <module>api-gateway</module>
     <module>discovery-service</module>
+    <module>reactive-game-service</module>
   </modules>
   <dependencyManagement>
     <dependencies>
